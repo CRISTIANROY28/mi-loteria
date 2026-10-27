@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b5cad">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Mi Lotería</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#f3f6fb;color:#1b2a41;font-size:18px}
+header{background:#0b5cad;color:#fff;padding:14px;text-align:center;font-size:22px;font-weight:bold}
+nav{display:flex;background:#08437f}
+nav button{flex:1;padding:14px 4px;border:0;background:none;color:#fff;font-size:16px}
+nav button.on{background:#f5b700;color:#000;font-weight:bold}
+main{padding:12px;max-width:600px;margin:auto}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px #0003}
+label{display:block;margin-top:10px;font-weight:bold}
+input,select{width:100%;padding:12px;font-size:20px;border:2px solid #9ab;border-radius:8px}
+.btn{display:block;width:100%;padding:14px;margin-top:14px;font-size:20px;border:0;border-radius:10px;background:#1e9e4a;color:#fff;font-weight:bold}
+.btn.gris{background:#667}
+.btn.rojo{background:#c0392b}
+.fila{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ddd}
+.num{font-size:26px;font-weight:bold;color:#0b5cad}
+.chico{font-size:14px;color:#556}
+.borrar{background:#c0392b;color:#fff;border:0;border-radius:6px;padding:8px 10px;font-size:14px}
+.total{font-size:20px;font-weight:bold;text-align:center}
+.der{text-align:right}
+.dinero{font-weight:bold;color:#1e7a3a}
+.grande{font-size:34px;font-weight:bold;color:#1e7a3a;text-align:center}
+.sorteoItem{display:flex;justify-content:space-between;align-items:center;padding:14px 8px;border-bottom:1px solid #ddd;cursor:pointer}
+.sorteoItem:active{background:#e8f0fb}
+.flecha{font-size:22px;color:#0b5cad;margin-left:8px}
+</style>
+</head>
+<body>
+<header>🎟️ Mi Lotería</header>
+<nav>
+<button id="t1" onclick="ver(1)">Vender</button>
+<button id="t2" onclick="ver(2)">Resumen</button>
+<button id="t3" onclick="ver(3)">Ventas</button>
+<button id="t4" onclick="ver(4)">Sorteos</button>
+</nav>
+<main>
+
+<div id="p1">
+<div class="card">
+<div class="chico" id="sorteoActual"></div>
+<label>Número (2 o 4 cifras)</label>
+<input id="numero" type="tel" maxlength="4" placeholder="Ej: 00 o 1234" oninput="mostrarPrecio()">
+<div class="chico" id="infoPrecio"></div>
+<label>Comprador</label>
+<input id="comprador" type="text" placeholder="Nombre">
+<label>Pedazos (1 a 100)</label>
+<input id="pedazos" type="number" min="1" max="100" value="1" oninput="mostrarPrecio()">
+<button class="btn" onclick="vender()">✅ Guardar venta</button>
+</div>
+</div>
+
+<div id="p2" style="display:none">
+<div class="card" id="resumenLista"></div>
+<div id="resumenDetalle" style="display:none">
+<button class="btn gris" style="margin-top:0;margin-bottom:12px" onclick="volverResumen()">⬅️ Volver a los sorteos</button>
+<div class="card"><div class="chico" id="detalleTitulo"></div><div class="grande" id="detalleTotal"></div><div class="total" id="detallePedazos"></div></div>
+<div class="card"><label>Buscar número</label><input id="buscar" type="tel" oninput="detalle()" placeholder="Escribe un número"></div>
+<div class="card" id="detalleLista"></div>
+</div>
+</div>
+
+<div id="p3" style="display:none">
+<div class="card"><div class="chico" id="ventasTitulo"></div><div class="grande" id="ventasTotal"></div><div class="total" id="ventasPedazos"></div></div>
+<div class="card" id="totalVentas"></div>
+<div class="card" id="listaVentas"></div>
+</div>
+
+<div id="p4" style="display:none">
+<div class="card">
+<label>Fecha del sorteo</label>
+<input id="fecha" type="date">
+<label>Tipo</label>
+<select id="tipo"><option>Miércoles</option><option>Domingo</option><option>Extraordinario</option></select>
+<button class="btn" onclick="nuevoSorteo()">➕ Crear sorteo nuevo</button>
+</div>
+<div class="card"><label>Elegir sorteo</label><select id="selSorteo" onchange="elegir()"></select></div>
+<div class="card">
+<button class="btn gris" onclick="respaldo()">💾 Copia de seguridad</button>
+<button class="btn gris" onclick="document.getElementById('arch').click()">📂 Restaurar copia</button>
+<input id="arch" type="file" accept=".json" style="display:none" onchange="restaurar(event)">
+<button class="btn rojo" onclick="borrarSorteo()">🗑️ Borrar este sorteo</button>
+</div>
+</div>
+
+</main>
+<script>
+if('serviceWorker' in navigator){
+ window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});
+}
+var PRECIO2=0.25;
+var PRECIO4=1;
+var D=JSON.parse(localStorage.getItem('loteria')||'{"sorteos":[],"actual":null}');
+var verId=null;
+function guardar(){localStorage.setItem('loteria',JSON.stringify(D));}
+function actual(){return D.sorteos.find(function(s){return s.id===D.actual;});}
+function porId(id){return D.sorteos.find(function(s){return s.id===id;});}
+function precioDe(num){return num.length===4?PRECIO4:PRECIO2;}
+function dinero(x){return '$'+x.toFixed(2);}
+function nombreSorteo(s){
+ var p=s.fecha.split('-');
+ return s.tipo+' '+p[2]+'/'+p[1]+'/'+p[0];
+}
+function totalesDe(s){
+ var d=0,p=0;
+ s.ventas.forEach(function(v){d+=v.pedazos*precioDe(v.numero);p+=v.pedazos;});
+ return {d:d,p:p};
+}
+function ver(n){
+ for(var i=1;i<=4;i++){document.getElementById('p'+i).style.display=(i===n)?'block':'none';document.getElementById('t'+i).className=(i===n)?'on':'';}
+ if(n===2){volverResumen();}
+ if(n===3)ventas();
+ if(n===4)sorteos();
+ if(n===1){cabecera();mostrarPrecio();}
+}
+function cabecera(){var s=actual();document.getElementById('sorteoActual').textContent=s?('Sorteo: '+nombreSorteo(s)):'⚠️ Primero crea un sorteo en la pestaña Sorteos';}
+function mostrarPrecio(){
+ var n=document.getElementById('numero').value.trim();
+ var p=parseInt(document.getElementById('pedazos').value,10)||0;
+ var box=document.getElementById('infoPrecio');
+ if(n.length===2||n.length===4){box.textContent='Precio por pedazo: '+dinero(precioDe(n))+' · Total: '+dinero(precioDe(n)*p);}else{box.textContent='';}
+}
+function nuevoSorteo(){
+ var f=document.getElementById('fecha').value,t=document.getElementById('tipo').value;
+ if(!f){alert('Elige la fecha');return;}
+ var s={id:Date.now(),fecha:f,tipo:t,ventas:[]};
+ D.sorteos.push(s);D.actual=s.id;guardar();sorteos();alert('Sorteo creado');
+}
+function sorteos(){
+ var sel=document.getElementById('selSorteo');sel.innerHTML='';
+ D.sorteos.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=nombreSorteo(s);if(s.id===D.actual)o.selected=true;sel.appendChild(o);});
+}
+function elegir(){D.actual=Number(document.getElementById('selSorteo').value);guardar();alert('Sorteo cambiado');}
+function vender(){
+ var s=actual();if(!s){alert('Primero crea un sorteo');ver(4);return;}
+ var n=document.getElementById('numero').value.trim();
+ var c=document.getElementById('comprador').value.trim()||'Sin nombre';
+ var p=parseInt(document.getElementById('pedazos').value,10);
+ if(!(n.length===2||n.length===4)||!/^[0-9]+$/.test(n)){alert('El número debe tener 2 o 4 cifras');return;}
+ if(!(p>=1&&p<=100)){alert('Los pedazos deben ser de 1 a 100');return;}
+ var pr=precioDe(n);
+ s.ventas.push({id:Date.now(),numero:n,comprador:c,pedazos:p,precio:pr,hora:new Date().toLocaleString()});
+ guardar();
+ document.getElementById('numero').value='';document.getElementById('comprador').value='';document.getElementById('pedazos').value=1;mostrarPrecio();
+ alert('Guardado: '+p+' pedazo(s) del '+n+' para '+c+' = '+dinero(p*pr));
+}
+function agrupar(s){
+ var m={};
+ s.ventas.forEach(function(v){
+  var pr=precioDe(v.numero);
+  if(!m[v.numero])m[v.numero]={p:0,d:0,c:0};
+  m[v.numero].p+=v.pedazos;m[v.numero].d+=v.pedazos*pr;m[v.numero].c++;
+ });
+ return m;
+}
+function volverResumen(){
+ verId=null;
+ document.getElementById('resumenDetalle').style.display='none';
+ document.getElementById('resumenLista').style.display='block';
+ var box=document.getElementById('resumenLista');
+ if(!D.sorteos.length){box.innerHTML='Todavía no hay sorteos. Crea uno en la pestaña Sorteos.';return;}
+ var lista=D.sorteos.slice().sort(function(a,b){return a.fecha<b.fecha?1:-1;});
+ box.innerHTML='<b>Toca un sorteo para ver sus números</b>'+lista.map(function(s){
+  var t=totalesDe(s);
+  return '<div class="sorteoItem" onclick="abrirSorteo('+s.id+')"><span><span class="num" style="font-size:20px">'+nombreSorteo(s)+'</span><br><span class="chico">'+t.p+' pedazos · '+s.ventas.length+' venta(s)</span></span><span class="dinero" style="font-size:22px">'+dinero(t.d)+'<span class="flecha">›</span></span></div>';
+ }).join('');
+}
+function abrirSorteo(id){
+ verId=id;
+ document.getElementById('buscar').value='';
+ document.getElementById('resumenLista').style.display='none';
+ document.getElementById('resumenDetalle').style.display='block';
+ detalle();
+}
+function detalle(){
+ var s=porId(verId);if(!s)return;
+ var t=totalesDe(s);
+ document.getElementById('detalleTitulo').textContent=nombreSorteo(s);
+ document.getElementById('detalleTotal').textContent=dinero(t.d);
+ document.getElementById('detallePedazos').textContent=t.p+' pedazos vendidos';
+ var q=document.getElementById('buscar').value.trim();
+ var m=agrupar(s);
+ var ks=Object.keys(m).filter(function(k){return !q||k.indexOf(q)===0;}).sort();
+ var box=document.getElementById('detalleLista');
+ if(!ks.length){box.innerHTML='Sin ventas';return;}
+ box.innerHTML=ks.map(function(k){return '<div class="fila"><span class="num">'+k+'</span><span class="der">'+m[k].p+' pedazos vendidos<br><span class="dinero">'+dinero(m[k].d)+'</span><br><span class="chico">'+m[k].c+' venta(s)</span></span></div>';}).join('');
+}
+function ventas(){
+ var s=actual();var box=document.getElementById('listaVentas');var tot=document.getElementById('totalVentas');
+ if(!s){document.getElementById('ventasTitulo').textContent='';document.getElementById('ventasTotal').textContent='';document.getElementById('ventasPedazos').textContent='';tot.innerHTML='Crea un sorteo primero';box.innerHTML='';return;}
+ var t=totalesDe(s);
+ document.getElementById('ventasTitulo').textContent='Total vendido · '+nombreSorteo(s);
+ document.getElementById('ventasTotal').textContent=dinero(t.d);
+ document.getElementById('ventasPedazos').textContent=t.p+' pedazos vendidos';
+ if(!s.ventas.length){tot.innerHTML='Sin ventas';box.innerHTML='';return;}
+ var m=agrupar(s);
+ tot.innerHTML='<b>Por número</b>'+Object.keys(m).sort().map(function(k){return '<div class="fila"><span class="num">'+k+'</span><span class="der">'+m[k].p+' pedazos vendidos<br><span class="dinero">'+dinero(m[k].d)+'</span></span></div>';}).join('');
+ box.innerHTML='<b>Cada venta</b>'+s.ventas.slice().reverse().map(function(v){var pr=precioDe(v.numero);return '<div class="fila"><span><span class="num">'+v.numero+'</span> × '+v.pedazos+' = <span class="dinero">'+dinero(v.pedazos*pr)+'</span><br><span class="chico">'+v.comprador+' · '+v.hora+'</span></span><button class="borrar" onclick="quitar('+v.id+')">Borrar</button></div>';}).join('');
+}
+function quitar(id){if(!confirm('¿Borrar esta venta?'))return;var s=actual();s.ventas=s.ventas.filter(function(v){return v.id!==id;});guardar();ventas();}
+function borrarSorteo(){
+ var s=actual();if(!s)return;
+ if(!confirm('¿Borrar TODO el sorteo '+nombreSorteo(s)+'?'))return;
+ D.sorteos=D.sorteos.filter(function(x){return x.id!==s.id;});
+ D.actual=D.sorteos.length?D.sorteos[D.sorteos.length-1].id:null;guardar();sorteos();
+}
+function respaldo(){
+ var b=new Blob([JSON.stringify(D)],{type:'application/json'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='respaldo-loteria.json';a.click();
+}
+function restaurar(e){
+ var f=e.target.files[0];if(!f)return;var r=new FileReader();
+ r.onload=function(){try{D=JSON.parse(r.result);guardar();sorteos();alert('Copia restaurada');}catch(x){alert('Archivo no válido');}};
+ r.readAsText(f);
+}
+document.getElementById('fecha').valueAsDate=new Date();
+ver(1);
+</script>
+</body>
+</html>
