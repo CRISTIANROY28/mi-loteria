@@ -1,0 +1,74 @@
+name: Compilar APK de Mi Lotería
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Preparar proyecto web
+        run: |
+          mkdir -p www
+          rsync -av ./ www/ \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='www' \
+            --exclude='node_modules' \
+            --exclude='*.zip' \
+            --exclude='android'
+
+          test -f www/index.html
+
+      - name: Instalar Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/android
+          npm install --save-dev @capacitor/cli
+
+      - name: Configurar aplicación
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.cristianroy.miloteria",
+            "appName": "Mi Lotería",
+            "webDir": "www",
+            "bundledWebRuntime": false
+          }
+          EOF
+
+      - name: Crear proyecto Android
+        run: npx cap add android
+
+      - name: Sincronizar archivos
+        run: npx cap sync android
+
+      - name: Compilar APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mi-loteria-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
