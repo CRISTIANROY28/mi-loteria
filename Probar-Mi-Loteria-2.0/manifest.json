@@ -1,0 +1,21 @@
+{
+  "background_color": "#eef2f9",
+  "dir": "ltr",
+  "display": "standalone",
+  "lang": "es",
+  "name": "Mi Lotería",
+  "description": "Control de ventas de lotería",
+  "orientation": "portrait",
+  "scope": "./",
+  "short_name": "Mi Lotería",
+  "start_url": "./",
+  "theme_color": "#0b3d91",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

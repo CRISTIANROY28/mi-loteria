@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d91">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Mi Lotería</title>
+<style>
+:root{--az:#0b3d91;--az2:#1565d8;--ver:#1e9e4a;--oro:#f5b700;--fondo:#eef2f9;--txt:#16233b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Roboto,Arial,sans-serif;margin:0;background:var(--fondo);color:var(--txt);font-size:17px}
+header{background:linear-gradient(135deg,var(--az),var(--az2));color:#fff;padding:20px 16px 24px;text-align:center;border-radius:0 0 26px 26px;box-shadow:0 4px 14px #0b3d9155}
+header .t{font-size:25px;font-weight:800;letter-spacing:.3px}
+header .s{font-size:13px;opacity:.85;margin-top:3px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;background:#fff;border-top:1px solid #dde4f0;box-shadow:0 -3px 14px #1b2a4120;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;padding:9px 1px 8px;border:0;background:none;color:#6b7a96;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;border-top:3px solid transparent}
+nav button .ic{font-size:22px;line-height:1}
+nav button.on{color:var(--az2);border-top-color:var(--oro);background:#f3f7ff}
+main{padding:16px 14px 110px;max-width:600px;margin:auto}
+.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #1b2a4114}
+label{display:block;margin:12px 0 6px;font-weight:700;font-size:15px;color:#33425e}
+input,select,textarea{width:100%;padding:13px 14px;font-size:19px;border:2px solid #d3dbe9;border-radius:12px;background:#f9fbff;color:var(--txt);outline:none;font-family:inherit}
+textarea{font-size:16px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--az2);background:#fff;box-shadow:0 0 0 3px #1565d826}
+.btn{display:block;width:100%;padding:15px;margin-top:16px;font-size:19px;border:0;border-radius:14px;background:linear-gradient(135deg,#22b455,#18893f);color:#fff;font-weight:700;box-shadow:0 4px 10px #1e9e4a40}
+.btn:active{transform:scale(.98)}
+.btn.gris{background:#5b6b86;box-shadow:none}
+.btn.rojo{background:linear-gradient(135deg,#d9473a,#b02e22);box-shadow:none}
+.btn.azul{background:linear-gradient(135deg,var(--az2),var(--az));box-shadow:0 4px 10px #0b3d9140}
+.fila{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e6ebf4;gap:10px}
+.fila:last-child{border-bottom:0}
+.num{font-size:26px;font-weight:800;color:var(--az)}
+.chico{font-size:14px;color:#6b7a96;line-height:1.35}
+.borrar{background:#fdecea;color:#c0392b;border:0;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700}
+.acciones{display:flex;gap:6px;margin-top:6px;justify-content:flex-end;flex-wrap:wrap}
+.accion{background:#e6efff;color:var(--az);border:0;border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700}
+.accion.rojo{background:#fdecea;color:#c0392b}
+.total{font-size:20px;font-weight:700;text-align:center}
+.der{text-align:right}
+.dinero{font-weight:800;color:#1e7a3a}
+.grande{font-size:38px;font-weight:800;color:#1e7a3a;text-align:center;margin:4px 0}
+.hero{background:linear-gradient(135deg,var(--az),var(--az2));color:#fff;text-align:center}
+.hero .chico{color:#cfe0ff}
+.hero .grande{color:#fff}
+.hero .total{color:#e4eeff;font-size:16px;font-weight:600}
+.sorteoItem{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-bottom:1px solid #e6ebf4;cursor:pointer}
+.sorteoItem:active{background:#eaf1ff}
+.flecha{font-size:24px;color:var(--az2);margin-left:8px}
+.prox{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid #e6ebf4}
+.prox:last-child{border-bottom:0}
+.prox button{background:linear-gradient(135deg,#22b455,#18893f);color:#fff;border:0;border-radius:10px;padding:11px 18px;font-size:16px;font-weight:700}
+.prox.creado button{background:#8fa0bd}
+.etiqueta{font-size:13px;color:#1e7a3a;font-weight:700}
+#sorteoActual{display:inline-block;background:#e6efff;color:var(--az);padding:7px 13px;border-radius:20px;font-weight:700;font-size:14px;margin-bottom:4px}
+#sorteoActual:empty{display:none}
+#infoPrecio{font-weight:700;color:var(--ver);margin-top:6px}
+#carritoLista{margin-top:8px}
+#carritoTotal{font-size:24px;color:var(--az)}
+#scanVideo{width:100%;max-height:62vh;border-radius:14px;background:#000;display:block;margin-top:12px}
+#scanEstado{min-height:20px;margin-top:8px}
+.resPremio{border-radius:16px;padding:18px;text-align:center;font-size:30px;font-weight:800;margin-bottom:12px}
+.resPremio.gana{background:#e8f8ee;color:#1e7a3a}
+.resPremio.pierde{background:#fdecea;color:#b02e22}
+.resPremio.neutro{background:#eef2f9;color:#33425e;font-size:20px}
+.modal{position:fixed;inset:0;left:0;top:0;right:0;bottom:0;background:#0009;z-index:50;overflow:auto;padding:16px;display:none}
+.modal.on{display:block}
+.ticket{background:#fff;max-width:360px;margin:0 auto;border-radius:16px;padding:18px;color:#16233b}
+.tkHead{font-size:24px;font-weight:900;text-align:center;color:var(--az)}
+.tkSub{text-align:center;font-size:13px;color:#6b7a96;margin-bottom:10px}
+.tkSorteo{text-align:center;font-weight:800;font-size:15px;margin-bottom:2px}
+.tkId{text-align:center;font-size:12px;color:#6b7a96;margin-bottom:10px}
+.tkLinea{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed #cfd8e6;font-size:15px}
+.tkLinea .tkNum{font-weight:900;color:var(--az);font-size:19px}
+.tkTotal{display:flex;justify-content:space-between;padding:12px 0;font-size:20px;font-weight:900;color:#1e7a3a}
+.tkDato{font-size:14px;color:#33425e;margin-top:3px}
+.tkQR{display:flex;justify-content:center;padding:12px 0 6px}
+.tkQR canvas,.tkQR img{max-width:100%}
+.tkNota{text-align:center;font-size:12px;color:#6b7a96;line-height:1.35}
+.modalBtns{max-width:360px;margin:12px auto 0}
+h3{margin:0 0 4px;font-size:18px;color:var(--az)}
+@media print{
+ header,nav,main{display:none!important}
+ body{background:#fff!important}
+ #ticketModal{display:block!important;position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}
+ .no-print{display:none!important}
+ .ticket{box-shadow:none!important;max-width:none!important;margin:0!important;border-radius:0!important}
+}
+</style>
+</head>
+<body>
+<header><div class="t">🎟️ Mi Lotería</div><div class="s">Control de ventas</div></header>
+<nav>
+<button id="t1" onclick="ver(1)"><span class="ic">💵</span>Vender</button>
+<button id="t2" onclick="ver(2)"><span class="ic">📊</span>Resumen</button>
+<button id="t3" onclick="ver(3)"><span class="ic">🧾</span>Ventas</button>
+<button id="t4" onclick="ver(4)"><span class="ic">📅</span>Sorteos</button>
+<button id="t5" onclick="ver(5)"><span class="ic">📷</span>Escanear</button>
+</nav>
+<main>
+
+<div id="p1">
+<div class="card">
+<div id="sorteoActual"></div>
+<label>Número (2 o 4 cifras)</label>
+<input id="numero" type="tel" maxlength="4" placeholder="Ej: 14, 28 o 1234" oninput="mostrarPrecio()">
+<div id="infoPrecio"></div>
+<label>Pedazos (1 a 100)</label>
+<input id="pedazos" type="number" min="1" max="100" value="1" oninput="mostrarPrecio()">
+<button class="btn azul" onclick="agregarAlCarrito()">➕ Agregar número al ticket</button>
+</div>
+<div class="card">
+<h3>Ticket de venta</h3>
+<div class="chico">Puedes agregar varios números para un mismo comprador.</div>
+<label>Comprador</label>
+<input id="comprador" type="text" placeholder="Nombre">
+<div id="carritoLista"></div>
+<div class="fila"><span class="total">Total</span><span class="dinero" id="carritoTotal">$0.00</span></div>
+<button class="btn" onclick="guardarTicket()">✅ Guardar ticket</button>
+<button class="btn gris" onclick="limpiarCarrito()">🗑️ Vaciar ticket</button>
+</div>
+</div>
+
+<div id="p2" style="display:none">
+<div class="card" id="resumenLista"></div>
+<div id="resumenDetalle" style="display:none">
+<button class="btn gris" style="margin-top:0;margin-bottom:14px" onclick="volverResumen()">⬅️ Volver a los sorteos</button>
+<div class="card hero"><div class="chico" id="detalleTitulo"></div><div class="grande" id="detalleTotal"></div><div class="total" id="detallePedazos"></div></div>
+<div class="card"><label style="margin-top:0">Buscar número</label><input id="buscar" type="tel" oninput="detalle()" placeholder="Escribe un número"></div>
+<div class="card" id="detalleLista"></div>
+</div>
+</div>
+
+<div id="p3" style="display:none">
+<div class="card hero"><div class="chico" id="ventasTitulo"></div><div class="grande" id="ventasTotal"></div><div class="total" id="ventasPedazos"></div></div>
+<div class="card" id="totalVentas"></div>
+<div class="card" id="listaVentas"></div>
+</div>
+
+<div id="p4" style="display:none">
+<div class="card">
+<h3>Próximos sorteos</h3>
+<div class="chico">De las próximas 2 semanas. Toca uno para vender en ese sorteo.</div>
+<div id="proximos"></div>
+</div>
+<div class="card">
+<h3>Sorteo extraordinario</h3>
+<div class="chico">Las fechas de los extraordinarios las eliges tú.</div>
+<label>Fecha</label>
+<input id="fechaExtra" type="date">
+<button class="btn azul" onclick="crearExtra()">➕ Crear extraordinario</button>
+</div>
+<div class="card"><label style="margin-top:0">Sorteo en el que estoy vendiendo</label><select id="selSorteo" onchange="elegir()"></select></div>
+<div class="card">
+<button class="btn gris" style="margin-top:0" onclick="respaldo()">💾 Copia de seguridad</button>
+<button class="btn gris" onclick="document.getElementById('arch').click()">📂 Restaurar copia</button>
+<input id="arch" type="file" accept=".json" style="display:none" onchange="restaurar(event)">
+<button class="btn rojo" onclick="borrarSorteo()">🗑️ Borrar este sorteo</button>
+</div>
+</div>
+
+<div id="p5" style="display:none">
+<div class="card">
+<h3>Resultado del sorteo</h3>
+<div class="chico" id="scanSorteoNombre"></div>
+<label>Número ganador (4 cifras)</label>
+<input id="ganador" type="tel" maxlength="4" placeholder="Ej: 1234">
+<label>Premio por pedazo con las 2 últimas cifras</label>
+<input id="premio2" type="number" min="0" step="0.01" value="0" placeholder="0.00">
+<label>Premio por pedazo con el número completo</label>
+<input id="premio4" type="number" min="0" step="0.01" value="0" placeholder="0.00">
+<button class="btn azul" onclick="guardarResultado()">💾 Guardar resultado</button>
+</div>
+<div class="card">
+<h3>Escanear ticket</h3>
+<div class="chico">Apunta la cámara al código QR del ticket para saber cuánto ganó el comprador.</div>
+<button class="btn" onclick="iniciarEscaner()">📷 Abrir cámara</button>
+<div id="scanWrap" style="display:none">
+<video id="scanVideo" playsinline></video>
+<canvas id="scanCanvas" style="display:none"></canvas>
+<button class="btn rojo" onclick="detenerEscaner()">Detener cámara</button>
+</div>
+<div id="scanEstado" class="chico"></div>
+<label>O pega el texto del QR</label>
+<textarea id="scanTexto" rows="3" placeholder="Pega aquí el contenido del código"></textarea>
+<button class="btn gris" onclick="analizarTextoQR()">🔎 Consultar ticket</button>
+</div>
+<div id="scanResultado"></div>
+</div>
+
+</main>
+
+<div id="ticketModal" class="modal">
+<div class="ticket" id="ticketContenido"></div>
+<div class="modalBtns no-print">
+<button class="btn azul" style="margin-top:0" onclick="imprimirTicket()">🖨️ Imprimir ticket</button>
+<button class="btn gris" onclick="cerrarTicket()">Cerrar</button>
+</div>
+</div>
+
+<script src="qrcode.min.js"></script>
+<script src="jsqr.min.js"></script>
+<script>
+if('serviceWorker' in navigator && !window.AndroidBridge){
+ window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js');});
+}
+var PRECIO2=0.25;
+var PRECIO4=1;
+var DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var D;
+try{D=JSON.parse(localStorage.getItem('loteria')||'{"sorteos":[],"actual":null}');}catch(e){D={sorteos:[],actual:null};}
+if(!D||typeof D!=='object'||!Array.isArray(D.sorteos))D={sorteos:[],actual:null};
+if(!('actual' in D))D.actual=null;
+var verId=null;
+var CARRITO=[];
+var CARRITO_SORTEO=null;
+var ticketsVista=[];
+var SCAN_STREAM=null;
+var SCAN_RAF=null;
+var SCAN_ULTIMO=0;
+function nuevoId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function nuevoTicket(){
+ var id;
+ do{id='T'+Date.now().toString(36).toUpperCase()+Math.floor(Math.random()*46656).toString(36).toUpperCase();}while(buscarTicketGlobal(id));
+ return id;
+}
+function buscarTicketGlobal(id){
+ return D.sorteos.some(function(s){return (s.ventas||[]).some(function(v){return String(v.ticket||'')===String(id);});});
+}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function mismoId(a,b){return String(a)===String(b);}
+function guardar(){localStorage.setItem('loteria',JSON.stringify(D));}
+function actual(){return D.sorteos.find(function(s){return mismoId(s.id,D.actual);});}
+function porId(id){return D.sorteos.find(function(s){return mismoId(s.id,id);});}
+function precioDe(num){return String(num).length===4?PRECIO4:PRECIO2;}
+function pedazosDe(s,numero){var t=0;(s.ventas||[]).forEach(function(v){if(String(v.numero)===String(numero))t+=Number(v.pedazos)||0;});return t;}
+function dinero(x){return '$'+(Number(x)||0).toFixed(2);}
+function iso(d){var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd;}
+function fechaLinda(f){var p=f.split('-');var d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2]));return DIAS[d.getDay()]+' '+d.getDate()+' de '+MESES[d.getMonth()];}
+function nombreSorteo(s){
+ var p=String(s.fecha||'').split('-');
+ return String(s.tipo||'')+' '+(p[2]||'?')+'/'+(p[1]||'?')+'/'+(p[0]||'?');
+}
+function normalizarResultado(r){
+ var o=r&&typeof r==='object'?r:{};
+ var g=String(o.ganador||'').trim();
+ if(!/^\d{4}$/.test(g))g='';
+ var p2=Number(o.premio2),p4=Number(o.premio4);
+ if(!isFinite(p2)||p2<0)p2=0;
+ if(!isFinite(p4)||p4<0)p4=0;
+ return {ganador:g,premio2:p2,premio4:p4};
+}
+function claveTicket(v){return String(v.ticket||('V'+v.id));}
+function ticketsDe(s){
+ var mapa={},lista=[];
+ (s.ventas||[]).forEach(function(v){
+  var k=claveTicket(v),p=Number(v.pedazos)||0,pr=Number(v.precio)||precioDe(v.numero);
+  if(!mapa[k]){mapa[k]={id:k,comprador:String(v.comprador||'Sin nombre'),hora:String(v.hora||''),lineas:[],total:0,pedazos:0,orden:0};lista.push(mapa[k]);}
+  mapa[k].lineas.push({numero:String(v.numero),pedazos:p,precio:pr,id:v.id});
+  mapa[k].total+=p*pr;
+  mapa[k].pedazos+=p;
+  var o=Number(v.id);
+  if(isFinite(o)&&o>mapa[k].orden)mapa[k].orden=o;
+ });
+ return lista;
+}
+function ticketPorClave(s,clave){
+ return ticketsDe(s).find(function(t){return mismoId(t.id,clave);})||null;
+}
+function totalesDe(s){
+ var d=0,p=0;
+ (s.ventas||[]).forEach(function(v){d+=(Number(v.pedazos)||0)*precioDe(v.numero);p+=Number(v.pedazos)||0;});
+ return {d:d,p:p};
+}
+function idValido(id,usados){
+ var n=Number(id);
+ if(!isFinite(n)||n<=0)n=nuevoId();
+ if(usados[n])throw new Error('Hay ventas o sorteos con el mismo ID');
+ usados[n]=true;return n;
+}
+function normalizarDatos(d){
+ if(!d||typeof d!=='object'||!Array.isArray(d.sorteos))throw new Error('El archivo no tiene una lista de sorteos válida');
+ var ids={};
+ var sorteos=d.sorteos.map(function(s){
+  if(!s||typeof s!=='object')throw new Error('Hay un sorteo inválido');
+  var fecha=String(s.fecha||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha))throw new Error('Hay una fecha inválida');
+  var tipo=String(s.tipo||'').trim();
+  if(!tipo)throw new Error('Hay un sorteo sin tipo');
+  var ventas=Array.isArray(s.ventas)?s.ventas:[];
+  return {id:idValido(s.id,ids),fecha:fecha,tipo:tipo,resultado:normalizarResultado(s.resultado),ventas:ventas.map(function(v){
+   if(!v||typeof v!=='object')throw new Error('Hay una venta inválida');
+   var numero=String(v.numero||'');
+   if(!/^(\d{2}|\d{4})$/.test(numero))throw new Error('Hay un número inválido');
+   var pedazos=parseInt(v.pedazos,10);
+   if(!(pedazos>=1&&pedazos<=100))throw new Error('Hay una venta con pedazos inválidos');
+   var id=idValido(v.id,ids);
+   return {id:id,ticket:String(v.ticket||('V'+id)).slice(0,80),numero:numero,comprador:String(v.comprador||'Sin nombre'),pedazos:pedazos,precio:precioDe(numero),hora:String(v.hora||'')};
+  })};
+ });
+ var actual=null;
+ if(d.actual!=null){actual=Number(d.actual);if(!sorteos.some(function(s){return s.id===actual;}))actual=null;}
+ if(actual===null&&sorteos.length)actual=sorteos[sorteos.length-1].id;
+ return {sorteos:sorteos,actual:actual};
+}
+function ver(n){
+ for(var i=1;i<=5;i++){document.getElementById('p'+i).style.display=(i===n)?'block':'none';document.getElementById('t'+i).className=(i===n)?'on':'';}
+ if(n!==5)detenerEscaner();
+ if(n===2){volverResumen();}
+ if(n===3)ventas();
+ if(n===4)sorteos();
+ if(n===5)cargarResultado();
+ if(n===1){cabecera();mostrarPrecio();pintarCarrito();}
+ window.scrollTo(0,0);
+}
+function cabecera(){var s=actual();document.getElementById('sorteoActual').textContent=s?('Sorteo: '+nombreSorteo(s)):'⚠️ Primero elige un sorteo en la pestaña Sorteos';}
+function mostrarPrecio(){
+ var n=document.getElementById('numero').value.trim();
+ var p=parseInt(document.getElementById('pedazos').value,10)||0;
+ var box=document.getElementById('infoPrecio');
+ if(n.length===2||n.length===4){box.textContent='Precio por pedazo: '+dinero(precioDe(n))+' · Total: '+dinero(precioDe(n)*p);}else{box.textContent='';}
+}
+function carritoPedazos(numero){
+ var t=0;CARRITO.forEach(function(l){if(String(l.numero)===String(numero))t+=Number(l.pedazos)||0;});return t;
+}
+function totalCarrito(){
+ var t=0;CARRITO.forEach(function(l){t+=(Number(l.pedazos)||0)*(Number(l.precio)||0);});return t;
+}
+function pedazosCarrito(){
+ var t=0;CARRITO.forEach(function(l){t+=Number(l.pedazos)||0;});return t;
+}
+function agregarAlCarrito(){
+ var s=actual();if(!s){alert('Primero elige un sorteo');ver(4);return;}
+ var n=document.getElementById('numero').value.trim();
+ var p=parseInt(document.getElementById('pedazos').value,10);
+ if(!(n.length===2||n.length===4)||!/^[0-9]+$/.test(n)){alert('El número debe tener 2 o 4 cifras');return;}
+ if(!(p>=1&&p<=100)){alert('Los pedazos deben ser de 1 a 100');return;}
+ if(CARRITO.length&&!mismoId(CARRITO_SORTEO,s.id)){alert('Termina o vacía el ticket actual antes de cambiar de sorteo');return;}
+ var ya=pedazosDe(s,n)+carritoPedazos(n);
+ if(ya+p>100){alert('No se pueden vender más de 100 pedazos del '+n+'.\nYa hay '+ya+' y quedan '+(100-ya)+'.');return;}
+ if(!CARRITO.length)CARRITO_SORTEO=s.id;
+ CARRITO.push({numero:n,pedazos:p,precio:precioDe(n)});
+ document.getElementById('numero').value='';
+ document.getElementById('pedazos').value=1;
+ mostrarPrecio();
+ pintarCarrito();
+}
+function quitarCarrito(i){
+ if(!CARRITO[i])return;
+ CARRITO.splice(i,1);
+ pintarCarrito();
+}
+function pintarCarrito(){
+ var box=document.getElementById('carritoLista');
+ if(!CARRITO.length){box.innerHTML='<div class="chico" style="padding:14px 0">Todavía no hay números en este ticket.</div>';}
+ else{box.innerHTML=CARRITO.map(function(l,i){
+  return '<div class="fila"><span><span class="num">'+esc(l.numero)+'</span> × '+esc(l.pedazos)+'<br><span class="chico">'+dinero(l.precio)+' por pedazo</span></span><span class="der"><span class="dinero">'+dinero(l.pedazos*l.precio)+'</span><br><button class="borrar" onclick="quitarCarrito('+i+')">Quitar</button></span></div>';
+ }).join('');}
+ document.getElementById('carritoTotal').textContent=dinero(totalCarrito());
+}
+function limpiarCarrito(){
+ if(CARRITO.length&&!confirm('¿Vaciar todos los números de este ticket?'))return;
+ CARRITO=[];CARRITO_SORTEO=null;document.getElementById('comprador').value='';pintarCarrito();mostrarPrecio();
+}
+function guardarTicket(){
+ var s=actual();if(!s){alert('Primero elige un sorteo');ver(4);return;}
+ if(!CARRITO.length){alert('Agrega al menos un número al ticket');return;}
+ if(!mismoId(CARRITO_SORTEO,s.id)){alert('El ticket pertenece a otro sorteo. Vacíalo y vuelve a agregar los números.');return;}
+ var c=document.getElementById('comprador').value.trim()||'Sin nombre';
+ var acum={};
+ CARRITO.forEach(function(l){acum[l.numero]=(acum[l.numero]||0)+(Number(l.pedazos)||0);});
+ for(var n in acum){
+  if(pedazosDe(s,n)+acum[n]>100){alert('No se pueden vender más de 100 pedazos del '+n+'.');return;}
+ }
+ var ticketId=nuevoTicket();
+ var hora=new Date().toLocaleString();
+ var total=0,pedazos=0;
+ s.ventas=s.ventas||[];
+ CARRITO.forEach(function(l){
+  var pr=precioDe(l.numero);
+  total+=l.pedazos*pr;pedazos+=l.pedazos;
+  s.ventas.push({id:nuevoId(),ticket:ticketId,numero:l.numero,comprador:c,pedazos:l.pedazos,precio:pr,hora:hora});
+ });
+ guardar();
+ var ticket={id:ticketId,comprador:c,hora:hora,total:total,pedazos:pedazos,lineas:CARRITO.map(function(l){return {numero:l.numero,pedazos:l.pedazos,precio:precioDe(l.numero)};})};
+ CARRITO=[];
+ CARRITO_SORTEO=null;
+ document.getElementById('comprador').value='';
+ document.getElementById('numero').value='';
+ document.getElementById('pedazos').value=1;
+ pintarCarrito();mostrarPrecio();
+ mostrarTicket(ticket,s);
+}
+function buscarSorteo(fecha,tipo){return D.sorteos.find(function(s){return s.fecha===fecha&&s.tipo===tipo;});}
+function proximosSorteos(){
+ var lista=[];var hoy=new Date();hoy.setHours(12,0,0,0);
+ for(var i=0;i<14;i++){
+  var d=new Date(hoy.getTime());d.setDate(hoy.getDate()+i);
+  var w=d.getDay();
+  if(w===3||w===0){lista.push({fecha:iso(d),tipo:w===3?'Miércoles':'Domingo'});}
+ }
+ return lista;
+}
+function pintarProximos(){
+ var box=document.getElementById('proximos');
+ var l=proximosSorteos();
+ box.innerHTML=l.map(function(x,i){
+  var ya=buscarSorteo(x.fecha,x.tipo);
+  return '<div class="prox'+(ya?' creado':'')+'"><span><b>'+esc(fechaLinda(x.fecha))+'</b><br><span class="etiqueta">'+(ya?(mismoId(D.actual,ya.id)?'● Vendiendo aquí':'Ya creado'):'')+'</span></span><button onclick="usarProximo('+i+')">'+(ya?'Usar':'Crear')+'</button></div>';
+ }).join('');
+}
+function usarProximo(i){
+ var x=proximosSorteos()[i];if(!x)return;
+ var s=buscarSorteo(x.fecha,x.tipo);
+ if(!s){s={id:nuevoId(),fecha:x.fecha,tipo:x.tipo,ventas:[],resultado:normalizarResultado()};D.sorteos.push(s);}
+ D.actual=s.id;guardar();sorteos();
+ alert('Listo. Vendiendo en: '+nombreSorteo(s));
+}
+function crearExtra(){
+ var f=document.getElementById('fechaExtra').value;
+ if(!f){alert('Elige la fecha del extraordinario');return;}
+ var s=buscarSorteo(f,'Extraordinario');
+ if(!s){s={id:nuevoId(),fecha:f,tipo:'Extraordinario',ventas:[],resultado:normalizarResultado()};D.sorteos.push(s);}
+ D.actual=s.id;guardar();sorteos();
+ alert('Listo. Vendiendo en: '+nombreSorteo(s));
+}
+function sorteos(){
+ var sel=document.getElementById('selSorteo');sel.innerHTML='';
+ D.sorteos.slice().sort(function(a,b){return a.fecha<b.fecha?1:-1;}).forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=nombreSorteo(s);if(mismoId(s.id,D.actual))o.selected=true;sel.appendChild(o);});
+ pintarProximos();
+}
+function elegir(){D.actual=Number(document.getElementById('selSorteo').value);guardar();pintarProximos();alert('Sorteo cambiado');}
+function agrupar(s){
+ var m={};
+ (s.ventas||[]).forEach(function(v){
+  var pr=precioDe(v.numero);
+  if(!m[v.numero])m[v.numero]={p:0,d:0,c:0};
+  m[v.numero].p+=Number(v.pedazos)||0;m[v.numero].d+=(Number(v.pedazos)||0)*pr;m[v.numero].c++;
+ });
+ return m;
+}
+function volverResumen(){
+ verId=null;
+ document.getElementById('resumenDetalle').style.display='none';
+ document.getElementById('resumenLista').style.display='block';
+ var box=document.getElementById('resumenLista');
+ if(!D.sorteos.length){box.innerHTML='Todavía no hay sorteos. Elige uno en la pestaña Sorteos.';return;}
+ var lista=D.sorteos.slice().sort(function(a,b){return a.fecha<b.fecha?1:-1;});
+ box.innerHTML='<h3>Toca un sorteo para ver sus números</h3>'+lista.map(function(s){
+  var t=totalesDe(s);
+  return '<div class="sorteoItem" onclick="abrirSorteo('+Number(s.id)+')"><span><span class="num" style="font-size:19px">'+esc(nombreSorteo(s))+'</span><br><span class="chico">'+t.p+' pedazos · '+(s.ventas||[]).length+' venta(s)</span></span><span class="dinero" style="font-size:22px">'+dinero(t.d)+'<span class="flecha">›</span></span></div>';
+ }).join('');
+}
+function abrirSorteo(id){
+ verId=id;
+ document.getElementById('buscar').value='';
+ document.getElementById('resumenLista').style.display='none';
+ document.getElementById('resumenDetalle').style.display='block';
+ detalle();
+}
+function detalle(){
+ var s=porId(verId);if(!s)return;
+ var t=totalesDe(s);
+ document.getElementById('detalleTitulo').textContent=nombreSorteo(s);
+ document.getElementById('detalleTotal').textContent=dinero(t.d);
+ document.getElementById('detallePedazos').textContent=t.p+' pedazos vendidos';
+ var q=document.getElementById('buscar').value.trim();
+ var m=agrupar(s);
+ var ks=Object.keys(m).filter(function(k){return !q||k.indexOf(q)===0;}).sort();
+ var box=document.getElementById('detalleLista');
+ if(!ks.length){box.innerHTML='Sin ventas';return;}
+ box.innerHTML=ks.map(function(k){return '<div class="fila"><span class="num">'+esc(k)+'</span><span class="der">'+m[k].p+' pedazos vendidos<br><span class="dinero">'+dinero(m[k].d)+'</span><br><span class="chico">'+m[k].c+' venta(s)</span></span></div>';}).join('');
+}
+function ventas(){
+ var s=actual();var box=document.getElementById('listaVentas');var tot=document.getElementById('totalVentas');
+ if(!s){document.getElementById('ventasTitulo').textContent='';document.getElementById('ventasTotal').textContent='';document.getElementById('ventasPedazos').textContent='';tot.innerHTML='Elige un sorteo primero';box.innerHTML='';ticketsVista=[];return;}
+ var t=totalesDe(s);
+ document.getElementById('ventasTitulo').textContent='Total vendido · '+nombreSorteo(s);
+ document.getElementById('ventasTotal').textContent=dinero(t.d);
+ document.getElementById('ventasPedazos').textContent=t.p+' pedazos vendidos';
+ ticketsVista=ticketsDe(s).slice().sort(function(a,b){return b.orden-a.orden;});
+ if(!ticketsVista.length){tot.innerHTML='Sin ventas';box.innerHTML='';return;}
+ var m=agrupar(s);
+ tot.innerHTML='<h3>Por número</h3>'+Object.keys(m).sort().map(function(k){return '<div class="fila"><span class="num">'+esc(k)+'</span><span class="der">'+m[k].p+' pedazos vendidos<br><span class="dinero">'+dinero(m[k].d)+'</span></span></div>';}).join('');
+ box.innerHTML='<h3>Tickets</h3>'+ticketsVista.map(function(tk,i){
+  return '<div class="fila"><span><span class="num" style="font-size:18px">'+esc(tk.id)+'</span><br><span class="chico">'+esc(tk.comprador)+' · '+tk.lineas.length+' número(s) · '+tk.pedazos+' pedazos<br>'+esc(tk.hora)+'</span></span><span class="der"><span class="dinero">'+dinero(tk.total)+'</span><div class="acciones"><button class="accion" onclick="verTicketIndex('+i+')">Ver</button><button class="accion rojo" onclick="quitarTicketIndex('+i+')">Borrar</button></div></span></div>';
+ }).join('');
+}
+function verTicketIndex(i){
+ var tk=ticketsVista[i];if(!tk)return;
+ var s=actual();if(!s)return;
+ mostrarTicket(tk,s);
+}
+function quitarTicketIndex(i){
+ var tk=ticketsVista[i];if(!tk)return;
+ if(!confirm('¿Borrar todo el ticket '+tk.id+'?'))return;
+ var s=actual();if(!s)return;
+ s.ventas=(s.ventas||[]).filter(function(v){return !mismoId(claveTicket(v),tk.id);});
+ guardar();ventas();
+}
+function mostrarTicket(ticket,s){
+ var box=document.getElementById('ticketContenido');
+ var lineas=ticket.lineas.map(function(l){
+  return '<div class="tkLinea"><span class="tkNum">'+esc(l.numero)+'</span><span>'+esc(l.pedazos)+' × '+dinero(l.precio)+'</span><b>'+dinero(l.pedazos*l.precio)+'</b></div>';
+ }).join('');
+ box.innerHTML='<div class="tkHead">🎟️ Mi Lotería</div><div class="tkSub">Comprobante de venta</div><div class="tkSorteo">'+esc(nombreSorteo(s))+'</div><div class="tkId">Ticket: '+esc(ticket.id)+'</div>'+lineas+'<div class="tkTotal"><span>Total</span><span>'+dinero(ticket.total)+'</span></div><div class="tkDato"><b>Comprador:</b> '+esc(ticket.comprador)+'</div><div class="tkDato"><b>Pedazos:</b> '+esc(ticket.pedazos)+'</div><div class="tkDato"><b>Fecha:</b> '+esc(ticket.hora)+'</div><div class="tkQR" id="ticketQR"></div><div class="tkNota">Escanee este código con Mi Lotería para consultar el premio de este ticket.</div>';
+ try{
+  var qr=document.getElementById('ticketQR');
+  qr.innerHTML='';
+  new QRCode(qr,{text:payloadTicket(ticket,s),width:210,height:210,correctLevel:QRCode.CorrectLevel.L});
+ }catch(e){
+  document.getElementById('ticketQR').innerHTML='<div class="chico">No se pudo crear el código QR</div>';
+ }
+ document.getElementById('ticketModal').className='modal on';
+ document.body.style.overflow='hidden';
+}
+function payloadTicket(t,s){
+ return JSON.stringify({v:1,s:String(s.id),id:String(t.id),f:String(s.fecha),t:String(s.tipo),c:String(t.comprador),l:t.lineas.map(function(l){return [String(l.numero),Number(l.pedazos),Number(l.precio)];}),m:Number(t.total),p:Number(t.pedazos),h:String(t.hora)});
+}
+function cerrarTicket(){
+ document.getElementById('ticketModal').className='modal';
+ document.getElementById('ticketContenido').innerHTML='';
+ document.body.style.overflow='';
+}
+function imprimirTicket(){
+ if(window.AndroidBridge&&AndroidBridge.imprimir){AndroidBridge.imprimir();return;}
+ window.print();
+}
+function borrarSorteo(){
+ var s=actual();if(!s)return;
+ if(!confirm('¿Borrar TODO el sorteo '+nombreSorteo(s)+'?'))return;
+ D.sorteos=D.sorteos.filter(function(x){return !mismoId(x.id,s.id);});
+ D.actual=D.sorteos.length?D.sorteos[D.sorteos.length-1].id:null;guardar();sorteos();
+}
+function respaldo(){
+ if(window.AndroidBridge){AndroidBridge.guardarRespaldo(JSON.stringify(D));return;}
+ var b=new Blob([JSON.stringify(D)],{type:'application/json'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='respaldo-loteria.json';a.click();
+}
+function restaurar(e){
+ var f=e.target.files[0];if(!f)return;var r=new FileReader();
+ r.onload=function(){
+  try{D=normalizarDatos(JSON.parse(r.result));guardar();sorteos();ver(1);alert('Copia restaurada');}
+  catch(x){alert('Archivo no válido: '+x.message);}
+  e.target.value='';
+ };
+ r.onerror=function(){alert('No se pudo leer el archivo');e.target.value='';};
+ r.readAsText(f);
+}
+function cargarResultado(){
+ var s=actual();
+ var nombre=document.getElementById('scanSorteoNombre');
+ if(!s){nombre.textContent='⚠️ Primero elige un sorteo en la pestaña Sorteos';document.getElementById('ganador').value='';document.getElementById('premio2').value=0;document.getElementById('premio4').value=0;return;}
+ nombre.textContent='Sorteo actual: '+nombreSorteo(s);
+ var r=normalizarResultado(s.resultado);
+ document.getElementById('ganador').value=r.ganador;
+ document.getElementById('premio2').value=r.premio2;
+ document.getElementById('premio4').value=r.premio4;
+}
+function guardarResultado(){
+ var s=actual();if(!s){alert('Primero elige un sorteo');ver(4);return;}
+ var g=document.getElementById('ganador').value.trim();
+ if(g&&!/^\d{4}$/.test(g)){alert('El número ganador debe tener 4 cifras');return;}
+ var p2=Number(document.getElementById('premio2').value);
+ var p4=Number(document.getElementById('premio4').value);
+ if(!isFinite(p2)||p2<0||!isFinite(p4)||p4<0){alert('Los premios no pueden ser negativos');return;}
+ s.resultado={ganador:g,premio2:p2,premio4:p4};
+ guardar();alert('Resultado guardado para '+nombreSorteo(s));
+}
+function configurarSorteo(id){
+ var s=porId(id);if(!s)return;
+ D.actual=s.id;guardar();ver(5);cargarResultado();
+ window.scrollTo(0,0);
+}
+function leerPayload(texto){
+ var d;
+ try{d=JSON.parse(String(texto||'').trim());}catch(e){throw new Error('El código no es un ticket válido');}
+ if(!d||d.v!==1||!Array.isArray(d.l)||!d.id)throw new Error('El código no es un ticket de Mi Lotería');
+ var lineas=d.l.map(function(x){
+  if(!Array.isArray(x))throw new Error('El ticket tiene números inválidos');
+  var numero=String(x[0]||''),pedazos=parseInt(x[1],10);
+  if(!/^(\d{2}|\d{4})$/.test(numero)||!(pedazos>=1&&pedazos<=100))throw new Error('El ticket tiene números inválidos');
+  return {numero:numero,pedazos:pedazos,precio:Number(x[2])||precioDe(numero)};
+ });
+ return {id:String(d.id),sid:String(d.s||''),comprador:String(d.c||'Sin nombre'),fecha:String(d.f||''),tipo:String(d.t||''),hora:String(d.h||''),total:Number(d.m)||0,pedazos:Number(d.p)||0,lineas:lineas};
+}
+function sorteoDePayload(p){
+ var s=null;
+ if(p.sid)s=D.sorteos.find(function(x){return mismoId(x.id,p.sid);});
+ if(!s&&p.fecha&&p.tipo)s=buscarSorteo(p.fecha,p.tipo);
+ if(!s){
+  s=D.sorteos.find(function(x){return ticketPorClave(x,p.id)!==null;})||null;
+ }
+ return s;
+}
+function calcularPremio(t,s){
+ var r=normalizarResultado(s.resultado);
+ var detalle=[],total=0;
+ t.lineas.forEach(function(l){
+  var numero=String(l.numero),gano=0,tipo='';
+  if(r.ganador){
+   if(numero.length===4&&numero===r.ganador){gano=l.pedazos*r.premio4;tipo='Número completo';}
+   else if(r.ganador.slice(-2)===numero.slice(-2)){gano=l.pedazos*r.premio2;tipo='Últimas 2 cifras';}
+  }
+  total+=gano;
+  detalle.push({numero:numero,pedazos:l.pedazos,tipo:tipo,gano:gano});
+ });
+ return {configurado:!!r.ganador,ganador:r.ganador,total:total,detalle:detalle};
+}
+function analizarPayload(texto){
+ var p;
+ try{p=leerPayload(texto);}catch(e){mostrarScanError(e.message);return;}
+ var s=sorteoDePayload(p);
+ if(!s){mostrarScanError('Este ticket pertenece a un sorteo que no está en este teléfono.');return;}
+ var tk=ticketPorClave(s,p.id);
+ var origen='guardado';
+ if(!tk){tk=p;origen='qr';}
+ var res=calcularPremio(tk,s);
+ mostrarResultadoScan(tk,s,res,origen);
+}
+function mostrarScanError(msg){
+ document.getElementById('scanEstado').textContent='';
+ document.getElementById('scanResultado').innerHTML='<div class="card"><div class="resPremio pierde" style="font-size:18px">⚠️ '+esc(msg)+'</div></div>';
+}
+function mostrarResultadoScan(tk,s,res,origen){
+ var h='<div class="card"><h3>Ticket '+esc(tk.id)+'</h3><div class="chico">'+esc(nombreSorteo(s))+'</div><div class="fila"><span><b>Comprador</b><br><span class="chico">'+esc(tk.comprador)+'</span></span><span class="der"><b>Total pagado</b><br><span class="dinero">'+dinero(tk.total)+'</span></span></div>';
+ if(origen==='qr')h+='<div class="chico" style="color:#b06500;margin-bottom:10px">Este ticket no está registrado en este teléfono. Se muestran los datos del código QR.</div>';
+ if(!res.configurado){
+  h+='<div class="resPremio neutro">Este sorteo todavía no tiene número ganador configurado.</div>';
+  if(!mismoId(s.id,D.actual))h+='<button class="btn azul" onclick="configurarSorteo('+Number(s.id)+')">Configurar este sorteo</button>';
+  h+='</div>';
+  document.getElementById('scanResultado').innerHTML=h;
+  document.getElementById('scanEstado').textContent='';
+  return;
+ }
+ h+='<div class="chico" style="margin-bottom:10px">Número ganador: <b>'+esc(res.ganador)+'</b></div>';
+ h+='<div class="resPremio '+(res.total>0?'gana':'pierde')+'">'+(res.total>0?'🎉 GANÓ '+dinero(res.total):'NO GANÓ')+'</div>';
+ h+=res.detalle.map(function(d){
+  return '<div class="fila"><span><span class="num">'+esc(d.numero)+'</span> × '+esc(d.pedazos)+'<br><span class="chico">'+esc(d.tipo||'Sin coincidencia')+'</span></span><span class="dinero">'+dinero(d.gano)+'</span></div>';
+ }).join('');
+ h+='</div>';
+ document.getElementById('scanResultado').innerHTML=h;
+ document.getElementById('scanEstado').textContent='';
+}
+function analizarTextoQR(){
+ var texto=document.getElementById('scanTexto').value.trim();
+ if(!texto){alert('Pega el texto del código QR');return;}
+ analizarPayload(texto);
+}
+function iniciarEscaner(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+  document.getElementById('scanEstado').textContent='Esta versión de Android no permite usar la cámara desde la app. Usa la opción de pegar el texto.';
+  return;
+ }
+ detenerEscaner();
+ document.getElementById('scanEstado').textContent='Pidiendo permiso de cámara...';
+ navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(stream){
+  SCAN_STREAM=stream;
+  var v=document.getElementById('scanVideo');
+  v.srcObject=stream;
+  v.setAttribute('playsinline','');
+  document.getElementById('scanWrap').style.display='block';
+  document.getElementById('scanEstado').textContent='Buscando código QR...';
+  v.onloadedmetadata=function(){
+   var inicio=v.play();
+   if(inicio&&inicio.then){
+    inicio.then(function(){escanearFrame();}).catch(function(){
+     document.getElementById('scanEstado').textContent='No se pudo iniciar la cámara.';
+    });
+   }else{
+    escanearFrame();
+   }
+  };
+ }).catch(function(){
+  document.getElementById('scanEstado').textContent='No se pudo abrir la cámara. Revisa el permiso de cámara de la app.';
+ });
+}
+function escanearFrame(){
+ if(!SCAN_STREAM)return;
+ SCAN_RAF=requestAnimationFrame(escanearFrame);
+ var ahora=Date.now();
+ if(ahora-SCAN_ULTIMO<300)return;
+ SCAN_ULTIMO=ahora;
+ var v=document.getElementById('scanVideo'),c=document.getElementById('scanCanvas');
+ if(!v||!c||v.readyState!==v.HAVE_ENOUGH_DATA)return;
+ var ancho=v.videoWidth,alto=v.videoHeight;
+ if(!ancho||!alto)return;
+ var escala=Math.min(1,640/ancho);
+ c.width=Math.round(ancho*escala);
+ c.height=Math.round(alto*escala);
+ var ctx=c.getContext('2d',{willReadFrequently:true});
+ ctx.drawImage(v,0,0,c.width,c.height);
+ var img;
+ try{img=ctx.getImageData(0,0,c.width,c.height);}catch(e){return;}
+ var code=null;
+ try{code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});}catch(e){return;}
+ if(code&&code.data){
+  detenerEscaner();
+  document.getElementById('scanTexto').value=code.data;
+  analizarPayload(code.data);
+ }
+}
+function detenerEscaner(){
+ if(SCAN_RAF){cancelAnimationFrame(SCAN_RAF);SCAN_RAF=null;}
+ if(SCAN_STREAM){SCAN_STREAM.getTracks().forEach(function(t){t.stop();});SCAN_STREAM=null;}
+ var v=document.getElementById('scanVideo');
+ if(v)v.srcObject=null;
+ var wrap=document.getElementById('scanWrap');
+ if(wrap)wrap.style.display='none';
+}
+document.getElementById('fechaExtra').valueAsDate=new Date();
+ver(1);
+</script>
+</body>
+</html>
